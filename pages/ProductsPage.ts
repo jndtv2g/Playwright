@@ -1,41 +1,54 @@
-import { Page, expect } from "@playwright/test";
+import { Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
-export class ProductsPage {
-    private page: Page;
-    private productsButton: string;
-    private itemText: string;
-    private itemButton: string;
-    private itemAdded: string;
+/**
+ * Products Page Object Model
+ */
+export class ProductsPage extends BasePage {
+    private productsContainer: string = '.features_items';
+    private productCard: string = '.product-image-wrapper';
+    private searchInput: string = '#search_product';
+    private searchButton: string = '#submit_search';
 
     constructor(page: Page) {
-        this.page = page;
-        this.productsButton = 'text=Products';
-        this.itemText = 'text=Men Tshirt';
-        this.itemAdded = 'text=Added!';
-        this.itemButton = '[data-product-id="2"]';
+        super(page);
     }
 
-    // Click on the 'Products' button
-    async goToProductsPage(): Promise<void> {
-        await this.page.click(this.productsButton);
+    /**
+     * Navigate to products page
+     */
+    async navigateToProductsPage(): Promise<void> {
+        await this.goto(`${this.baseURL}products`);
     }
 
-    // Hover on a product to add to cart later on
-    async hoverOnProduct(): Promise<void> {
-        // Check whether the hover is working
-        console.log('Hovering over product:', this.itemText);
-        // await this.page.locator(this.itemText).scrollIntoViewIfNeeded();
-        await this.page.hover(this.itemText);
+    /**
+     * Verify user is on products page
+     */
+    async verifyOnProductsPage(): Promise<void> {
+        await this.verifyURL(/products/);
     }
 
-    // Hover on a product to add to cart later on
-    async addProductToCart(): Promise<void> {
-        await this.page.click(this.itemButton);
+    /**
+     * Search for a product
+     */
+    async searchProduct(searchTerm: string): Promise<void> {
+        await this.fill(this.searchInput, searchTerm);
+        await this.click(this.searchButton);
     }
 
-    // Verify product has been added to cart with the confirmation pop up
-    async verifyProductAdded(): Promise<void> {
-        const addedMsg = this.page.locator(this.itemAdded);
-        await expect(addedMsg).toBeVisible();
+    /**
+     * Get count of products displayed
+     */
+    async getProductCount(): Promise<number> {
+        const products = await this.page.locator(this.productCard).count();
+        return products;
+    }
+
+    /**
+     * Click on a specific product by index
+     */
+    async clickProductByIndex(index: number): Promise<void> {
+        await this.page.locator(this.productCard).nth(index).click();
     }
 }
+

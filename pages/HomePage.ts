@@ -1,33 +1,43 @@
-import { Page, expect } from "@playwright/test";
+import { Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
+import { BASE_URL, SELECTORS } from "../utils/constants";
 
-export class HomePage {
-    private page: Page;
-    private loginButton: string;
-    private productsButton: string;
+/**
+ * Home Page Object Model
+ */
+export class HomePage extends BasePage {
+    private loginButton: string = SELECTORS.loginButton;
+    private productsButton: string = SELECTORS.productsButton;
 
     constructor(page: Page) {
-        this.page = page;
-        this.loginButton = 'text=Signup / Login';
-        this.productsButton = 'text=Products';
+        super(page);
     }
 
-    // Navigate to the homepage
+    /**
+     * Navigate to the homepage
+     */
     async navigateToHomePage(): Promise<void> {
-        await this.page.goto("https://automationexercise.com/");
+        await this.goto(BASE_URL);
     }
 
-    // Click on the 'Signup / Login' button
+    /**
+     * Click on the 'Signup / Login' button
+     */
     async goToLoginPage(): Promise<void> {
-        await this.page.click(this.loginButton);
+        await this.click(this.loginButton);
     }
 
-    // Verify user has landed in the correct homepage
-    async verifyHomepage(): Promise<void> {
-        await expect(this.page).toHaveTitle(/Automation Exercise/);
-    }
-
-    // Click on the 'Products' button
+    /**
+     * Click on the 'Products' button
+     */
     async goToProductsPage(): Promise<void> {
-        await this.page.click(this.productsButton);
+        await this.click(this.productsButton);
+    }
+
+    /**
+     * Verify user is on home page
+     */
+    async verifyOnHomePage(): Promise<void> {
+        await this.verifyTitle(/Automation Exercise/);
     }
 }
