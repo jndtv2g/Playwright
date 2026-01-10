@@ -26,7 +26,7 @@ export const PAGE_URLS = {
  * Selectors - Common selectors that might be reused
  */
 export const SELECTORS = {
-    loginButton: 'text=Signup / Login',
+    loginButton: 'a[href="/login"]',
     productsButton: 'text=Products'
 };
 

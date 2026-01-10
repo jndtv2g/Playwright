@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { Page, expect } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 /**
@@ -48,5 +48,9 @@ export class LoginPage extends BasePage {
      */
     async clickLoginButton(): Promise<void> {
         await this.click(this.loginButton);
+    }
+
+    async verifyLoginSuccess(): Promise<void> {
+        await expect(this.page.getByText('Logged in as')).toBeVisible();
     }
 }
