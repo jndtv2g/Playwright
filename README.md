@@ -1,107 +1,43 @@
 # Page Objects
 
-This directory contains all Page Object Model (POM) classes for the test suite. The Page Object Model is a design pattern that encapsulates web page elements and their interactions into reusable classes, promoting maintainability, readability, and reducing code duplication across tests.
+This directory contains the page object classes for testing the Automation Exercise site. All page objects extend `BasePage`, which handles common navigation and interaction patterns.
 
-## Architecture
+## What's Here
 
-The page objects follow an inheritance-based architecture where all specific page classes extend a common `BasePage` class. This design provides shared functionality while allowing each page to implement its own specific behaviors and interactions.
+- **BasePage.ts**: Shared base class with common methods (navigation, clicking, filling fields, URL/title checks). All other pages inherit from this.
 
-### Base Class
+- **HomePage.ts**: Handles the homepage - navigating to it, jumping to login or products pages, and verifying you're actually on the home page.
 
-- **BasePage.ts**: The foundational class that provides common functionality shared across all page objects. It includes methods for navigation, element interaction (click, fill, getText), URL verification, and title validation. All page objects inherit from this base class to leverage these shared capabilities.
+- **LoginPage.ts**: Everything login-related. You can either use the quick `login()` method or break it down into individual steps (`enterEmail()`, `enterPassword()`, `clickLoginButton()`). Also includes verification that login succeeded.
 
-### Page Objects
+- **ProductsPage.ts**: Product browsing and search functionality. Navigate to products, search for items, count results, and click specific products by index.
 
-- **HomePage.ts**: Encapsulates the home page functionality, including navigation to the homepage, transitioning to the login page, accessing the products page, and verifying the user's presence on the home page.
+## How It Works
 
-- **LoginPage.ts**: Manages all login-related interactions, including entering credentials, submitting login forms, verifying successful authentication, and validating that users are on the login page. Provides both high-level (single method) and granular (individual field) interaction methods.
-
-- **ProductsPage.ts**: Handles product-related operations such as navigating to the products page, searching for products, retrieving product counts, and interacting with individual product items by index.
-
-## Usage
-
-Page objects are automatically injected into test functions through Playwright's custom fixtures mechanism. This eliminates the need for manual instantiation and ensures consistent page object initialization across all tests.
-
-### Basic Example
+Page objects are automatically available in your tests through custom fixtures. Just import the test function from the fixtures file and the page objects are ready to use:
 
 ```typescript
 import { test, expect } from "../fixtures/test.fixtures";
 
-test("Navigate and login", async ({ homePage, loginPage }) => {
+test("Sign in and browse products", async ({ homePage, loginPage, productsPage }) => {
     await homePage.navigateToHomePage();
     await homePage.goToLoginPage();
     await loginPage.login('email@example.com', 'password');
     await loginPage.verifyLoginSuccess();
-});
-```
-
-### Advanced Example
-
-```typescript
-import { test, expect } from "../fixtures/test.fixtures";
-
-test("Product search workflow", async ({ homePage, productsPage }) => {
-    // Navigate through the application
-    await homePage.navigateToHomePage();
+    
     await homePage.goToProductsPage();
-    
-    // Verify navigation
-    await productsPage.verifyOnProductsPage();
-    
-    // Perform product search
     await productsPage.searchProduct('shirt');
-    
-    // Validate results
-    const productCount = await productsPage.getProductCount();
-    expect(productCount).toBeGreaterThan(0);
+    const count = await productsPage.getProductCount();
+    expect(count).toBeGreaterThan(0);
 });
 ```
 
-### Granular Interaction Example
+The fixtures handle creating and cleaning up page object instances, so you don't need to worry about that.
 
-For scenarios requiring more control over individual steps:
+## Available Page Objects
 
-```typescript
-test("Step-by-step login", async ({ loginPage }) => {
-    await loginPage.verifyOnLoginPage();
-    await loginPage.enterEmail('user@example.com');
-    await loginPage.enterPassword('securePassword123');
-    await loginPage.clickLoginButton();
-    await loginPage.verifyLoginSuccess();
-});
-```
+- `homePage` - Home page navigation and verification
+- `loginPage` - Login functionality and verification
+- `productsPage` - Product browsing and search
 
-## Fixtures Integration
-
-Page objects are provided through custom fixtures defined in `fixtures/test.fixtures.ts`. The fixtures automatically create instances of each page object and make them available as test parameters. This approach ensures:
-
-- Consistent page object initialization
-- Automatic cleanup after tests
-- Type safety through TypeScript
-- Easy access to multiple page objects in a single test
-
-Available fixtures:
-- `homePage`: Instance of `HomePage`
-- `loginPage`: Instance of `LoginPage`
-- `productsPage`: Instance of `ProductsPage`
-
-## Best Practices
-
-1. **Use page objects for all interactions**: Avoid direct Playwright API calls in test files; route all interactions through page objects.
-
-2. **Leverage base class methods**: Utilize inherited methods from `BasePage` for common operations like navigation and element interaction.
-
-3. **Combine page objects**: Use multiple page objects in a single test to represent complex user workflows.
-
-4. **Verify state**: Use verification methods (e.g., `verifyOnLoginPage()`, `verifyLoginSuccess()`) to ensure expected page states before proceeding with actions.
-
-5. **Keep selectors private**: All element selectors are encapsulated as private properties within page objects, making maintenance easier when UI changes occur.
-
-## Maintenance
-
-When the application UI changes:
-1. Update the relevant page object's selectors or methods
-2. All tests using that page object will automatically benefit from the changes
-3. No need to modify individual test files
-
-This centralized approach significantly reduces maintenance overhead and ensures consistency across the test suite.
+All selectors are kept private within each page object, so if the site's UI changes, you only need to update the relevant page class and all tests using it will pick up the changes automatically.
