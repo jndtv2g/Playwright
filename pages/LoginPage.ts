@@ -1,28 +1,52 @@
-// src/pages/LoginPage.ts
 import { Page } from "@playwright/test";
+import { BasePage } from "./BasePage";
 
-export class LoginPage {
-    private page: Page;
-    private emailField: string;
-    private passwordField: string;
-    private loginButton: string;
+/**
+ * Login Page Object Model
+ */
+export class LoginPage extends BasePage {
+    private emailField: string = '[data-qa="login-email"]';
+    private passwordField: string = '[data-qa="login-password"]';
+    private loginButton: string = '[data-qa="login-button"]';
 
     constructor(page: Page) {
-        this.page = page;
-        this.emailField = '[data-qa="login-email"]';
-        this.passwordField = '[data-qa="login-password"]';
-        this.loginButton = '[data-qa="login-button"]';
+        super(page);
     }
 
-    // Login method
+    /**
+     * Login with email and password
+     */
     async login(email: string, password: string): Promise<void> {
-        await this.page.fill(this.emailField, email);
-        await this.page.fill(this.passwordField, password);
-        await this.page.click(this.loginButton);
+        await this.fill(this.emailField, email);
+        await this.fill(this.passwordField, password);
+        await this.click(this.loginButton);
     }
 
-    // Verify that the user is on the login page
+    /**
+     * Verify that the user is on the login page
+     */
     async verifyOnLoginPage(): Promise<void> {
-        await this.page.waitForURL(/login/);
+        await this.waitForURL(/login/);
+    }
+
+    /**
+     * Fill email field
+     */
+    async enterEmail(email: string): Promise<void> {
+        await this.fill(this.emailField, email);
+    }
+
+    /**
+     * Fill password field
+     */
+    async enterPassword(password: string): Promise<void> {
+        await this.fill(this.passwordField, password);
+    }
+
+    /**
+     * Click login button
+     */
+    async clickLoginButton(): Promise<void> {
+        await this.click(this.loginButton);
     }
 }
