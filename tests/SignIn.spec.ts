@@ -1,7 +1,7 @@
 import { test, expect } from "../fixtures/test.fixtures";
 import { TEST_CREDENTIALS } from "../utils/constants";
 
-test.describe.serial('Validate Automation Exercise website', () => {
+test.describe.serial('Login to site as existing user', () => {
     // *************** Test Cases: START *************** //
 
     test("Login to site as existing user", async ({ homePage, loginPage }) => {
@@ -16,6 +16,9 @@ test.describe.serial('Validate Automation Exercise website', () => {
 
         // Enter login credentials and login
         await loginPage.login(TEST_CREDENTIALS.validEmail, TEST_CREDENTIALS.validPassword);
+        
+        // Verify login success
+        await loginPage.verifyLoginSuccess();
     });
     
 
