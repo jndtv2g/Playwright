@@ -4,7 +4,7 @@ import { TEST_CREDENTIALS } from "../utils/constants";
 test.describe.serial('Navigate to list of products', () => {
     // *************** Test Cases: START *************** //
     
-    test("Navigate to list of products", async ({ homePage, productsPage }) => {
+    test("Navigate to PLP", async ({ homePage, productsPage }) => {
         // Navigate to the homepage
         await homePage.navigateToHomePage();
 

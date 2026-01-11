@@ -9,6 +9,7 @@ export class ProductsPage extends BasePage {
     private productCard: string = '.product-image-wrapper';
     private searchInput: string = '#search_product';
     private searchButton: string = '#submit_search';
+    private PDPButton: string = 'a[href="/product_details/2]';
 
     constructor(page: Page) {
         super(page);
@@ -26,6 +27,13 @@ export class ProductsPage extends BasePage {
      */
     async verifyOnProductsPage(): Promise<void> {
         await this.verifyURL(/products/);
+    }
+    
+    /**
+     * Click on a product from the listing page
+     */
+    async clickOnProduct(): Promise<void> {
+        await this.click(this.PDPButton);
     }
 
     /**
