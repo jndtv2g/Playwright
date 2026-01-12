@@ -1,7 +1,7 @@
 import { test, expect } from "../fixtures/test.fixtures";
 import { TEST_CREDENTIALS } from "../utils/constants";
 
-test.describe.serial('Navigate to list of products', () => {
+test.describe.serial('Navigate to Showpo\'s list of products', () => {
     // *************** Test Cases: START *************** //
     
     test("Navigate to PLP", async ({ homePage, productsPage }) => {
