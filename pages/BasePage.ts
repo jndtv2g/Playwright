@@ -5,7 +5,7 @@ import { Page, expect } from "@playwright/test";
  */
 export class BasePage {
     protected page: Page;
-    protected baseURL: string = "https://automationexercise.com/";
+    protected baseURL: string = "https://www.showpo.com/";
 
     constructor(page: Page) {
         this.page = page;

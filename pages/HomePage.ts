@@ -38,6 +38,7 @@ export class HomePage extends BasePage {
      * Verify user is on home page
      */
     async verifyOnHomePage(): Promise<void> {
-        await this.verifyTitle(/Automation Exercise/);
+        await this.verifyTitle(/Showpo/);
+        await this.verifyURL(/showpo.com/);
     }
 }
