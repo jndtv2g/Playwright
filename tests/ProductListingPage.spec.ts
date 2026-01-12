@@ -6,13 +6,17 @@ test.describe.serial('Navigate to list of products', () => {
     
     test("Navigate to PLP", async ({ homePage, productsPage }) => {
         // Navigate to the homepage
+        // Popups are automatically dismissed by navigateToHomePage()
         await homePage.navigateToHomePage();
 
         // Navigate to the Products page
+        // Popups are automatically dismissed by goToProductsPage()
         await homePage.goToProductsPage();
         
-        // Verify user is on products page  
-        await productsPage.verifyOnProductsPage();
+        // Run validations while continuously checking for and dismissing popups
+        await productsPage.runValidationsWithPopupDismissal([
+            async () => await productsPage.verifyOnProductsPage()
+        ]);
     });
 
     // *************** Test Cases: END *************** //

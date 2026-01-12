@@ -11,11 +11,11 @@ test.describe.serial('Navigate to detail of selected product', () => {
         // Navigate to the Products page
         await homePage.goToProductsPage();
         
-        // Verify user is on products page  
-        await productsPage.verifyOnProductsPage();
-
-        // Click on a product from the list
-        await productsPage.clickOnProduct();
+        // Run validations and actions while continuously checking for and dismissing popups
+        await productsPage.runValidationsWithPopupDismissal([
+            async () => await productsPage.verifyOnProductsPage(),
+            async () => await productsPage.clickOnProduct()
+        ]);
     });
 
     // *************** Test Cases: END *************** //

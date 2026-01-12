@@ -6,11 +6,15 @@ test.describe.serial('Validate Showpo website', () => {
 
     test("Navigate to Showpo homepage", async ({ homePage }) => {
         // Navigate to the homepage
+        // Popups are automatically dismissed by navigateToHomePage()
         await homePage.navigateToHomePage();
         
-        // Verify the title of the page
-        await homePage.verifyOnHomePage();
+        // Run validations while continuously checking for and dismissing popups
+        // This ensures popups don't interfere with validation steps
+        await homePage.runValidationsWithPopupDismissal([
+            async () => await homePage.verifyOnHomePage()
+        ]);
     });
 
     // *************** Test Cases: END *************** //
-}); 
+});

@@ -17,9 +17,13 @@ export class ProductsPage extends BasePage {
 
     /**
      * Navigate to products page
+     * Automatically dismisses popups after navigation
      */
     async navigateToProductsPage(): Promise<void> {
         await this.goto(`${this.baseURL}products`);
+        // Popups are automatically dismissed by goto(), but we wait a bit for any delayed popups
+        await this.page.waitForTimeout(1000);
+        await this.dismissAllPopups();
     }
 
     /**
