@@ -4,18 +4,17 @@ import { TEST_CREDENTIALS } from "../utils/constants";
 test.describe.serial('Navigate to detail of selected product', () => {
     // *************** Test Cases: START *************** //
     
-    test("Navigate to PDP", async ({ homePage, productsPage }) => {
+    test("Navigate to PDP", async ({ homePage, productListingPage }) => {
         // Navigate to the homepage
         await homePage.navigateToHomePage();
 
         // Navigate to the Products page
-        await homePage.goToProductsPage();
+        await productListingPage.navigateToNewInCategory();
         
-        // Verify user is on products page  
-        await productsPage.verifyOnProductsPage();
-
-        // Click on a product from the list
-        await productsPage.clickOnProduct();
+        // Run validations and actions while continuously checking for and dismissing popups
+        await productListingPage.runValidationsWithPopupDismissal([
+            async () => await productListingPage.verifyOnProductListingPage(),
+        ]);
     });
 
     // *************** Test Cases: END *************** //

@@ -1,7 +1,7 @@
 /**
  * Constants used across the test suite
  */
-export const BASE_URL = "https://automationexercise.com/";
+export const BASE_URL = "https://showpo.com/";
 
 /**
  * Test user credentials

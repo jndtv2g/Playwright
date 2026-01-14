@@ -9,6 +9,7 @@ import { ProductsPage } from "../pages/ProductsPage";
 type PageObjects = {
     homePage: HomePage;
     loginPage: LoginPage;
+    productListingPage: ProductsPage;
     productsPage: ProductsPage;
 };
 
@@ -19,6 +20,10 @@ export const test = base.extend<PageObjects>({
 
     loginPage: async ({ page }, use) => {
         await use(new LoginPage(page));
+    },
+
+    productListingPage: async ({ page }, use) => {
+        await use(new ProductsPage(page));
     },
 
     productsPage: async ({ page }, use) => {
