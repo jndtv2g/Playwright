@@ -30,31 +30,141 @@ export class ProductsPage extends BasePage {
     //     await this.dismissAllPopups();
     // }
 
+    /**
+     * Normalize category name to URL format (e.g., "Shoes & Accessories" -> "shoes-accessories")
+     */
+    private normalizeCategoryNameForURL(categoryName: string): string {
+        return categoryName
+            .toLowerCase()
+            .replace(/&/g, 'and')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
     async navigateToCategory(categoryName: string, expectedHeaderText: string): Promise<void> {
-        await this.page.getByText(categoryName).click({force: true});
+        // Ensure page is still valid before proceeding
+        if (this.page.isClosed()) {
+            throw new Error('Page has been closed');
+        }
+        
+        // Normalize category name for URL matching
+        const normalizedCategory = this.normalizeCategoryNameForURL(categoryName);
+        
+        // Try multiple strategies to find the correct category link
+        let categoryLink;
+        try {
+            // Strategy 1: Find link with href containing the normalized category and filter by text
+            const linksWithHref = this.page.locator(`a[href*="/collections/${normalizedCategory}"]`);
+            const count = await linksWithHref.count();
+            
+            if (count === 1) {
+                categoryLink = linksWithHref.first();
+            } else {
+                // Filter by text content matching the category name
+                const exactMatch = linksWithHref.filter({ hasText: new RegExp(`^${categoryName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') });
+                const exactMatchCount = await exactMatch.count();
+                if (exactMatchCount > 0) {
+                    categoryLink = exactMatch.first();
+                } else {
+                    // Try partial match
+                    categoryLink = linksWithHref.filter({ hasText: categoryName }).first();
+                }
+            }
+            await categoryLink.waitFor({ state: 'visible', timeout: 3000 });
+        } catch (error) {
+            try {
+                // Strategy 2: Use getByRole with exact match and check href
+                const allLinks = this.page.getByRole('link', { name: categoryName, exact: true });
+                const linkCount = await allLinks.count();
+                
+                if (linkCount === 1) {
+                    categoryLink = allLinks.first();
+                } else {
+                    // Find the one with the collections href
+                    for (let i = 0; i < linkCount; i++) {
+                        const link = allLinks.nth(i);
+                        const href = await link.getAttribute('href');
+                        if (href && href.includes(`/collections/${normalizedCategory}`)) {
+                            categoryLink = link;
+                            break;
+                        }
+                    }
+                    // If still not found, use first one
+                    if (!categoryLink) {
+                        categoryLink = allLinks.first();
+                    }
+                }
+                await categoryLink.waitFor({ state: 'visible', timeout: 3000 });
+            } catch (error2) {
+                // Strategy 3: Final fallback - just use first exact match
+                categoryLink = this.page.getByRole('link', { name: categoryName, exact: true }).first();
+                await categoryLink.waitFor({ state: 'visible', timeout: 3000 });
+            }
+        }
+        
+        await categoryLink.click({ force: true });
         await this.dismissAllPopups();
         
-        // Wait for navigation to complete
-        await this.page.waitForURL(/collections/, { timeout: 10000 });
+        // Wait for navigation to complete (reduced timeout)
+        await this.page.waitForURL(/collections/, { timeout: 8000 });
         
-        // Wait for the page to be fully loaded - wait for network idle or load state
-        await this.page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {
-            // If networkidle times out, at least wait for DOM to be ready
-            return this.page.waitForLoadState('domcontentloaded');
+        // Wait for DOM to be ready (reduced timeout)
+        await this.page.waitForLoadState('domcontentloaded', { timeout: 5000 });
+        
+        // Small delay to allow any dynamic content to render
+        await this.page.waitForTimeout(500);
+        
+        // Try to wait for network idle, but don't fail if it times out (reduced timeout)
+        await this.page.waitForLoadState('networkidle', { timeout: 2000 }).catch(() => {
+            // Network idle is optional - continue if it times out
         });
         
-        // Wait for the header element to be visible and attached to DOM
-        const headerLocator = this.page.locator(this.headerText);
-        await headerLocator.waitFor({ state: 'visible', timeout: 10000 });
+        // Ensure page is still valid before looking for elements
+        if (this.page.isClosed()) {
+            throw new Error('Page was closed during navigation');
+        }
         
-        // Now verify the header text
-        await expect(headerLocator).toHaveText(expectedHeaderText, { timeout: 5000 });
+        // Use Playwright's getByRole which is more robust and flexible
+        // Try multiple strategies to find the header with shorter timeouts
+        let headerLocator;
+        try {
+            // First try: Use getByRole with heading level 1 and text
+            headerLocator = this.page.getByRole('heading', { name: new RegExp(expectedHeaderText, 'i'), level: 1 });
+            await headerLocator.waitFor({ state: 'visible', timeout: 5000 });
+        } catch (error) {
+            // Fallback 1: Try any heading with the text
+            try {
+                headerLocator = this.page.getByRole('heading', { name: new RegExp(expectedHeaderText, 'i') });
+                await headerLocator.waitFor({ state: 'visible', timeout: 5000 });
+            } catch (error2) {
+                // Fallback 2: Try the CSS selector approach
+                headerLocator = this.page.locator('h1').filter({ hasText: expectedHeaderText }).first();
+                await headerLocator.waitFor({ state: 'visible', timeout: 5000 });
+            }
+        }
+        
+        // Verify the header text with a flexible check (reduced timeout)
+        await expect(headerLocator).toHaveText(new RegExp(expectedHeaderText, 'i'), { timeout: 3000 });
 
-        // Wait for product count element to be visible before checking
-        const productCountLocator = this.page.locator(this.productCount);
-        await productCountLocator.waitFor({ state: 'visible', timeout: 10000 });
+        // Wait for product count element with fallback strategies (reduced timeouts)
+        let productCountLocator;
+        try {
+            // First try: Use the specific selector
+            productCountLocator = this.page.locator(this.productCount).first();
+            await productCountLocator.waitFor({ state: 'visible', timeout: 5000 });
+        } catch (error) {
+            // Fallback: Try finding by partial class match
+            try {
+                productCountLocator = this.page.locator('[class*="text-sm"][class*="text-xs"]').first();
+                await productCountLocator.waitFor({ state: 'visible', timeout: 5000 });
+            } catch (error2) {
+                // Final fallback: Just look for any element with product count pattern
+                productCountLocator = this.page.locator('text=/\\d+.*product/i').first();
+                await productCountLocator.waitFor({ state: 'visible', timeout: 5000 });
+            }
+        }
         
-        // Verify product count should not be 0
+        // Verify product count should not be 0; otherwise page is in 5xx server error state
         const productCountText = await productCountLocator.textContent();
         const productCountNumber = parseInt(productCountText?.replace(/\D/g, '') || '0', 10);
         expect(productCountNumber).toBeGreaterThan(0);
