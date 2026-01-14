@@ -10,6 +10,7 @@ type PageObjects = {
     homePage: HomePage;
     loginPage: LoginPage;
     productListingPage: ProductsPage;
+    productsPage: ProductsPage;
 };
 
 export const test = base.extend<PageObjects>({
@@ -22,6 +23,10 @@ export const test = base.extend<PageObjects>({
     },
 
     productListingPage: async ({ page }, use) => {
+        await use(new ProductsPage(page));
+    },
+
+    productsPage: async ({ page }, use) => {
         await use(new ProductsPage(page));
     },
 });

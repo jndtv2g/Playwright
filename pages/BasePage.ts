@@ -10,11 +10,20 @@ export class BasePage {
     protected baseURL: string = "https://www.showpo.com/";
     protected klaviyoPopup: KlaviyoPopup;
     protected regionDetectionPopup: RegionDetectionPopup;
+    private continuousPopupDismissalInterval: NodeJS.Timeout | null = null;
+    private isContinuousDismissalActive: boolean = false;
 
     constructor(page: Page) {
         this.page = page;
         this.klaviyoPopup = new KlaviyoPopup(page);
         this.regionDetectionPopup = new RegionDetectionPopup(page);
+        // Automatically start continuous popup dismissal
+        this.startContinuousPopupDismissal();
+        
+        // Stop continuous dismissal when page closes
+        this.page.on('close', () => {
+            this.stopContinuousPopupDismissal();
+        });
     }
 
     /**
@@ -124,6 +133,60 @@ export class BasePage {
     async dismissAllPopups(): Promise<void> {
         await this.dismissKlaviyoPopup();
         await this.dismissRegionDetectionPopup();
+    }
+
+    /**
+     * Start continuous popup dismissal that runs throughout the test
+     * This automatically dismisses popups whenever they appear
+     * @param checkInterval How often to check for popups in milliseconds (default: 1000ms)
+     */
+    startContinuousPopupDismissal(checkInterval: number = 1000): void {
+        // Don't start if already active
+        if (this.isContinuousDismissalActive) {
+            return;
+        }
+
+        this.isContinuousDismissalActive = true;
+        
+        // Clear any existing interval
+        if (this.continuousPopupDismissalInterval) {
+            clearInterval(this.continuousPopupDismissalInterval);
+        }
+
+        // Start checking for and dismissing popups at regular intervals
+        this.continuousPopupDismissalInterval = setInterval(async () => {
+            try {
+                // Only dismiss if page is not closed
+                if (!this.page.isClosed()) {
+                    await this.dismissAllPopups();
+                } else {
+                    // Page is closed, stop the interval
+                    this.stopContinuousPopupDismissal();
+                }
+            } catch (error) {
+                // Silently handle errors (page might be closing, etc.)
+                // Don't log to avoid cluttering test output
+            }
+        }, checkInterval);
+    }
+
+    /**
+     * Stop continuous popup dismissal
+     * Useful when you want to manually control popup dismissal
+     */
+    stopContinuousPopupDismissal(): void {
+        this.isContinuousDismissalActive = false;
+        if (this.continuousPopupDismissalInterval) {
+            clearInterval(this.continuousPopupDismissalInterval);
+            this.continuousPopupDismissalInterval = null;
+        }
+    }
+
+    /**
+     * Check if continuous popup dismissal is active
+     */
+    getContinuousDismissalStatus(): boolean {
+        return this.isContinuousDismissalActive;
     }
 
     /**
