@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import { BasePage } from "./BasePage";
 
 /**
@@ -10,6 +10,7 @@ export class ProductsPage extends BasePage {
     private searchInput: string = '#search_product';
     private searchButton: string = '#submit_search';
     private PDPButton: string = 'a[href="/product_details/2]';
+    private productCount: string = '.whitespace-nowrap.text-xs.font-normal.text-neutral-1000.sm\:text-sm'
 
     constructor(page: Page) {
         super(page);
@@ -19,48 +20,56 @@ export class ProductsPage extends BasePage {
      * Navigate to products page
      * Automatically dismisses popups after navigation
      */
-    async navigateToProductsPage(): Promise<void> {
+    async navigateToNewInPage(): Promise<void> {
         await this.goto(`${this.baseURL}products`);
         // Popups are automatically dismissed by goto(), but we wait a bit for any delayed popups
         await this.page.waitForTimeout(1000);
         await this.dismissAllPopups();
     }
 
+    async navigateToCategory(categoryName: string, expectedHeaderText: string): Promise<void> {
+        await this.page.getByText(categoryName).click({force: true});
+        await this.dismissAllPopups();
+        await this.verifyTitle(expectedHeaderText);
+        const productCount = await this.page.locator(this.productCount).textContent();
+        expect(productCount).toBeGreaterThan(0);
+        await this.dismissAllPopups();
+    }
+
     /**
      * Verify user is on products page
      */
-    async verifyOnProductsPage(): Promise<void> {
-        await this.verifyURL(/products/);
+    async verifyOnProductListingPage(): Promise<void> {
+        await this.verifyURL(/collections/);
+    }
+
+    /**
+     * Navigate to New In category
+     */
+    async navigateToNewInCategory(): Promise<void> {
+        await this.navigateToCategory('New In', 'New In');
     }
     
     /**
-     * Click on a product from the listing page
+     * Navigate to Clothes category
      */
-    async clickOnProduct(): Promise<void> {
-        await this.click(this.PDPButton);
+    async navigateToClothesCategory(): Promise<void> {
+        await this.navigateToCategory('Clothes', 'Clothes');
     }
 
     /**
-     * Search for a product
+     * Navigate to Dresses category
      */
-    async searchProduct(searchTerm: string): Promise<void> {
-        await this.fill(this.searchInput, searchTerm);
-        await this.click(this.searchButton);
+    async navigateToDressesCategory(): Promise<void> {
+        await this.navigateToCategory('Dresses', 'Dresses');
     }
 
-    /**
-     * Get count of products displayed
-     */
-    async getProductCount(): Promise<number> {
-        const products = await this.page.locator(this.productCard).count();
-        return products;
-    }
 
     /**
-     * Click on a specific product by index
+     * Navigate to Sale category
      */
-    async clickProductByIndex(index: number): Promise<void> {
-        await this.page.locator(this.productCard).nth(index).click();
+    async navigateToSaleCategory(): Promise<void> {
+        await this.navigateToCategory('Sale', 'Sale');
     }
 }
 
